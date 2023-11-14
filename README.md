@@ -1,7 +1,7 @@
 
-# singular_flutter_sdk
+# singular_flutter_kids_sdk
 
-A Flutter plugin for Singular SDK.
+A Flutter plugin for Singular Kids SDK.
 
 ---
 
@@ -25,9 +25,9 @@ A Flutter plugin for Singular SDK.
 
 ### This plugin is built for
 
-- iOS SingularSDK **v12.1.1**
+- iOS SingularSDK **v12.2.0**
 
-- Android SingularSDK **v12.2.0**
+- Android SingularSDK **v12.4.0**
 
 ---
 
@@ -37,7 +37,7 @@ You can add Singular Plugin to your Flutter app by adding following to your `pub
 
 ```yaml
 dependencies:
-  singular_flutter_sdk: ^1.2.0
+  singular_flutter_kids_sdk: ^1.2.0
 ```
 
 Then navigate to your project in the terminal and run:
@@ -50,8 +50,8 @@ Before you initialize the Singular SDK, you have to create a SingularConfig obje
 
 *Example:*
 ```dart
-import 'package:singular_flutter_sdk/singular.dart';
-import 'package:singular_flutter_sdk/singular_config.dart';
+import 'package:singular_flutter_kids_sdk/singular.dart';
+import 'package:singular_flutter_kids_sdk/singular_config.dart';
 
 SingularConfig config = new SingularConfig('API_KEY', 'API_SECRET');
 config.customUserId = "test@test.com";
@@ -82,7 +82,7 @@ Report an IAP event to Singular
 
 *Example:*
 ```dart
-import 'package:singular_flutter_sdk/singular_iap.dart';
+import 'package:singular_flutter_kids_sdk/singular_iap.dart';
 
  singularPurchase = new SingularIOSIAP(
    product.price,

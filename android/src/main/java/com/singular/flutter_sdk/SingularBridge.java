@@ -1,4 +1,4 @@
-package com.singular.flutter_sdk;
+package com.singular.flutter_kids_sdk;
 
 import android.content.Intent;
 

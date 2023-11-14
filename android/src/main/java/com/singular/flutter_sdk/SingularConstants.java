@@ -1,4 +1,4 @@
-package com.singular.flutter_sdk;
+package com.singular.flutter_kids_sdk;
 
 public class SingularConstants {
     final static String START = "start";

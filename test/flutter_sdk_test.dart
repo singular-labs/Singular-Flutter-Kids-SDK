@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:singular_flutter_sdk/singular.dart';
-import 'package:singular_flutter_sdk/singular_config.dart';
+import 'package:singular_flutter_kids_sdk/singular.dart';
+import 'package:singular_flutter_kids_sdk/singular_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

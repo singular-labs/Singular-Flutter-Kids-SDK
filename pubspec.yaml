@@ -27,8 +27,8 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.singular.flutter_sdk
+        package: com.singular.flutter_kids_sdk
         pluginClass: SingularSDK
       ios:
         pluginClass: SingularSDK
-        package: com.singular.flutter_sdk
+        package: com.singular.flutter_kids_sdk
