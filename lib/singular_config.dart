@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
-import 'package:singular_flutter_sdk/singular_global_property.dart';
-import 'package:singular_flutter_sdk/singular_link_params.dart';
-
+import 'package:singular_flutter_kids_sdk/singular_global_property.dart';
+import 'package:singular_flutter_kids_sdk/singular_link_params.dart';
 
 typedef void SingularLinksHandler(SingularLinkParams params);
 typedef void ConversionValueUpdatedCallback(int conversionValue);

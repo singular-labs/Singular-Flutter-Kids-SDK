@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:singular_flutter_sdk/singular_ad_data.dart';
-import 'package:singular_flutter_sdk/singular_config.dart';
-import 'package:singular_flutter_sdk/singular_iap.dart';
+import 'package:singular_flutter_kids_sdk/singular_ad_data.dart';
+import 'package:singular_flutter_kids_sdk/singular_config.dart';
+import 'package:singular_flutter_kids_sdk/singular_iap.dart';
 
 const ADMON_REVENUE_EVENT_NAME = '__ADMON_USER_LEVEL_REVENUE__';
 const _SDK_NAME = 'Flutter';

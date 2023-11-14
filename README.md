@@ -161,7 +161,7 @@ In the project’s AppDelegate.m, add the following:
   
 *Swift:*
 ```swift  
-import singular_flutter_sdk
+import singular_flutter_kids_sdk
 
 override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
