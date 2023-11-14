@@ -23,7 +23,6 @@ class SingularConfig {
   double sessionTimeout = -1;
   String? customUserId;
   bool? limitDataSharing;
-  String? imei;
   String? facebookAppId;
   bool collectOAID = false;
   bool enableLogging = false;
@@ -98,10 +97,6 @@ class SingularConfig {
 
     if (limitDataSharing != null) {
       configMap['limitDataSharing'] = limitDataSharing;
-    }
-
-    if (imei != null) {
-      configMap['imei'] = imei;
     }
 
     if (facebookAppId != null) {
