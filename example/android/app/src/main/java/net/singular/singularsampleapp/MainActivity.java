@@ -2,7 +2,7 @@ package net.singular.singularsampleapp;
 
 import android.content.Intent;
 import androidx.annotation.NonNull;
-import com.singular.flutter_sdk.SingularBridge;
+import com.singular.flutter_kids_sdk.SingularBridge;
 import io.flutter.embedding.android.FlutterActivity;
 
 public class MainActivity extends FlutterActivity {
