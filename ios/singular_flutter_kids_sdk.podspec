@@ -1,19 +1,19 @@
 Pod::Spec.new do |s|
-  s.name             = 'singular_flutter_sdk'
+  s.name             = 'singular_flutter_kids_sdk'
   s.version          = '1.2.0'
-  s.summary          = 'Singular flutter plugin project.'
+  s.summary          = 'Singular flutter plugin for Kids project.'
   s.description      = <<-DESC
 Singular's flutter plugin project.
                        DESC
   s.homepage         = 'https://www.singular.net/'
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Singular Labs' => 'support@singular.net'}
-  s.source           = { :git => "https://github.com/singular-labs/Singular-Flutter-SDK.git", :tag => s.version.to_s }
+  s.source           = { :git => "https://github.com/singular-labs/Singular-Flutter-Kids-SDK.git", :tag => s.version.to_s }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.platform = :ios, '9.0'
-  s.ios.dependency 'Singular-SDK', '12.2.0'
+  s.ios.dependency 'Singular-Kids-SDK', '12.2.0'
   s.static_framework = true
 
   # Flutter.framework does not contain a i386 slice.

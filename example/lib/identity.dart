@@ -1,6 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:singular_flutter_sdk/singular.dart';
+import 'package:singular_flutter_kids_sdk/singular.dart';
 
 class Identity extends StatefulWidget {
   @override

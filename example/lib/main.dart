@@ -4,9 +4,9 @@ import 'package:example/identity.dart';
 import 'package:example/revenue.dart';
 import 'package:example/skan.dart';
 import 'package:flutter/material.dart';
-import 'package:singular_flutter_sdk/singular.dart';
-import 'package:singular_flutter_sdk/singular_config.dart';
-import 'package:singular_flutter_sdk/singular_link_params.dart';
+import 'package:singular_flutter_kids_sdk/singular.dart';
+import 'package:singular_flutter_kids_sdk/singular_config.dart';
+import 'package:singular_flutter_kids_sdk/singular_link_params.dart';
 
 void main() {
   runApp(MyApp());

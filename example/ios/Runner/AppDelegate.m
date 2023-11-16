@@ -11,9 +11,6 @@
     NSLog(@"didFinishLaunchingWithOptions");
     
     // Override point for customization after application launch.
-    [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
-        NSLog(@"requestTrackingAuthorizationWithCompletionHandler");
-    }];
     [SingularAppDelegate shared].launchOptions = launchOptions;
     return [super application:application didFinishLaunchingWithOptions:launchOptions];
 }

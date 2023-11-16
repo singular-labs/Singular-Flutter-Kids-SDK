@@ -1,4 +1,4 @@
-group 'com.singular.sdk.flutter_sdk'
+group 'com.singular.sdk.flutter_kids_sdk'
 version '1.0'
 
 buildscript {
@@ -31,5 +31,5 @@ android {
 }
 
 dependencies {
-    implementation 'com.singular.sdk:singular_sdk:12.4.0'
+    implementation 'com.singular.sdk:singular_kids_sdk:12.4.0'
 }

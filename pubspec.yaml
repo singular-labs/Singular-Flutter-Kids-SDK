@@ -1,7 +1,7 @@
-name: singular_flutter_sdk
-description: A Flutter plugin for Singular SDK.
+name: singular_flutter_kids_sdk
+description: A Flutter plugin for Singular Kids SDK.
 version: 1.2.0
-homepage: https://github.com/singular-labs/Singular-Flutter-SDK.git
+homepage: https://github.com/singular-labs/Singular-Flutter-Kids-SDK.git
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
@@ -27,8 +27,8 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.singular.flutter_sdk
+        package: com.singular.flutter_kids_sdk
         pluginClass: SingularSDK
       ios:
         pluginClass: SingularSDK
-        package: com.singular.flutter_sdk
+        package: com.singular.flutter_kids_sdk
