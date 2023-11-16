@@ -196,7 +196,7 @@ In the project’s MainActivity.java, add the following:
 
 ```java
 
-import com.singular.flutter_sdk.SingularBridge;
+import com.singular.flutter_kids_sdk.SingularBridge;
 
 @Override
 protected void onNewIntent(@NonNull Intent intent) {
@@ -209,7 +209,7 @@ protected void onNewIntent(@NonNull Intent intent) {
   
 ```java
 
-import com.singular.flutter_sdk.SingularBridge;
+import com.singular.flutter_kids_sdk.SingularBridge;
 
 override fun onNewIntent(intent: Intent) {
   super.onNewIntent(intent)
