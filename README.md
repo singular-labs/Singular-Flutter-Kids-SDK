@@ -25,9 +25,9 @@ A Flutter plugin for Singular Kids SDK.
 
 ### This plugin is built for
 
-- iOS SingularSDK **v12.2.0**
+- iOS SingularSDK **v12.3.2**
 
-- Android SingularSDK **v12.4.0**
+- Android SingularSDK **v12.5.4**
 
 ---
 
@@ -37,7 +37,7 @@ You can add Singular Plugin to your Flutter app by adding following to your `pub
 
 ```yaml
 dependencies:
-  singular_flutter_kids_sdk: ^1.2.0
+  singular_flutter_kids_sdk: ^1.3.3
 ```
 
 Then navigate to your project in the terminal and run:
