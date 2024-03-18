@@ -219,11 +219,6 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
       singularConfig.withLimitDataSharing((boolean) limitDataSharing);
     }
 
-    String imei = (String) configDict.get("imei");
-    if (imei != null) {
-      singularConfig.withIMEI(imei);
-    }
-
     String facebookAppId = (String) configDict.get("facebookAppId");
     if (facebookAppId != null) {
       singularConfig.withFacebookAppId(facebookAppId);
