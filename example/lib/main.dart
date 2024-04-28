@@ -96,6 +96,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     config.waitForTrackingAuthorizationWithTimeoutInterval = 60;
     config.skAdNetworkEnabled = true;
     config.clipboardAttribution = true;
+    config.enableLogging = true;
+    config.logLevel = 3;
     config.singularLinksHandler = (SingularLinkParams params) {
       print('Received deferred deeplink: ');
       deeplinkParams['deeplink'] = params.deeplink;
@@ -120,6 +122,20 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     config.manualSkanConversionManagement = true;
     config.espDomains = ['bit.ly'];
     config.facebookAppId = "FACEBOOK_APP_ID";
+    config.deviceAttributionCallback = (Map<String, dynamic> deviceAttributionInfo) {
+      print('Received device attribution information: ' + deviceAttributionInfo.toString());
+    };
+    
+
+    config.customSdid = "custom-sdid";
+    config.didSetSdidCallback = (String sdid) {
+      print("did set sdid = " + sdid);
+    };
+
+    config.sdidReceivedCallback = (String sdid) {
+      print("received sdid = " + sdid);
+    };
+
     Singular.start(config);
   }
 

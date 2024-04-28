@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:singular_flutter_kids_sdk/singular_global_property.dart';
 import 'package:singular_flutter_kids_sdk/singular_link_params.dart';
@@ -6,6 +8,8 @@ typedef void SingularLinksHandler(SingularLinkParams params);
 typedef void ConversionValueUpdatedCallback(int conversionValue);
 typedef void ShortLinkCallback(String ? data, String ? error);
 typedef void ConversionValuesUpdatedCallback(int conversionValue, int coarse, bool lock);
+typedef void DeviceAttributionCallback(Map<String, dynamic> attributes);
+typedef void SdidAccessorCallback(String sdid);
 
 class SingularConfig {
   static const MethodChannel _channel = const MethodChannel('singular-api');
@@ -20,6 +24,7 @@ class SingularConfig {
   SingularLinksHandler? singularLinksHandler;
   ConversionValueUpdatedCallback? conversionValueUpdatedCallback;
   ConversionValuesUpdatedCallback? conversionValuesUpdatedCallback;
+  DeviceAttributionCallback? deviceAttributionCallback;
   double sessionTimeout = -1;
   String? customUserId;
   bool? limitDataSharing;
@@ -29,6 +34,12 @@ class SingularConfig {
   ShortLinkCallback ? shortLinkCallback;
   List<SingularGlobalProperty> globalProperties = [];
   List <String> espDomains = [];
+  int logLevel = -1;
+
+  // sdid
+  String? customSdid;
+  SdidAccessorCallback? didSetSdidCallback;
+  SdidAccessorCallback? sdidReceivedCallback;
 
   SingularConfig(this._apiKey, this._secretKey) {
     _channel.setMethodCallHandler((MethodCall call) async {
@@ -53,6 +64,24 @@ class SingularConfig {
           case 'conversionValuesUpdatedCallbackName':
             if (conversionValuesUpdatedCallback != null) {
               conversionValuesUpdatedCallback!(call.arguments['conversionValue'], call.arguments['coarse'], call.arguments['lock']);
+            }
+            break;
+          case 'deviceAttributionCallbackName':
+            if (deviceAttributionCallback != null) {
+              Map<String, dynamic>? decodedData = jsonDecode(call.arguments);
+              if (decodedData != null) {
+                deviceAttributionCallback!(decodedData);
+              }
+            }
+            break;
+          case 'sdidReceivedCallbackName':
+            if(sdidReceivedCallback != null) {
+              sdidReceivedCallback!(call.arguments);
+            }
+            break;
+          case 'didSetSdidCallbackName':
+            if(didSetSdidCallback != null) {
+              didSetSdidCallback!(call.arguments);
             }
             break;
           default:
@@ -91,6 +120,23 @@ class SingularConfig {
       'conversionValuesUpdatedCallbackName';
     }
 
+    if (deviceAttributionCallback != null) {
+      configMap['deviceAttributionCallback'] = 'deviceAttributionCallbackName';
+    }
+    
+    // SDID
+    if (customSdid != null) {
+      configMap['customSdid'] = customSdid;
+    }
+
+    if (sdidReceivedCallback != null) {
+      configMap['sdidReceivedCallback'] = 'sdidReceivedCallbackName';
+    }
+
+    if (didSetSdidCallback != null) {
+      configMap['didSetSdidCallback'] = 'didSetSdidCallbackName';
+    }
+
     if (customUserId != null) {
       configMap['customUserId'] = customUserId;
     }
@@ -106,7 +152,7 @@ class SingularConfig {
     configMap['sessionTimeout'] = sessionTimeout;
     configMap['collectOAID'] = collectOAID;
     configMap['enableLogging'] = enableLogging;
-
+    configMap['logLevel'] = logLevel;
     configMap['espDomains'] = espDomains;
 
     List<Map<String, dynamic>> propertiesList = [];

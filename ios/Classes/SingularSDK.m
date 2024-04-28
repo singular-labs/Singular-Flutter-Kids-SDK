@@ -132,13 +132,15 @@ static NSDictionary *configDict;
     }
 
     config.singularLinksHandler = ^(SingularLinkParams *params) {
-        NSMutableDictionary *linkParams = [[NSMutableDictionary alloc] init];
-        [linkParams setValue:[params getDeepLink] forKey:@"deeplink"];
-        [linkParams setValue:[params getPassthrough] forKey:@"passthrough"];
-        [linkParams setValue:@([params isDeferred]) forKey:@"isDeferred"];
-        [linkParams setValue:([params getUrlParameters] ? [params getUrlParameters] : @{ }) forKey:@"urlParameters"];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSMutableDictionary *linkParams = [[NSMutableDictionary alloc] init];
+            [linkParams setValue:[params getDeepLink] forKey:@"deeplink"];
+            [linkParams setValue:[params getPassthrough] forKey:@"passthrough"];
+            [linkParams setValue:@([params isDeferred]) forKey:@"isDeferred"];
+            [linkParams setValue:([params getUrlParameters] ? [params getUrlParameters] : @{ }) forKey:@"urlParameters"];
 
-        [channel invokeMethod:@"singularLinksHandlerName" arguments:linkParams];
+            [channel invokeMethod:@"singularLinksHandlerName" arguments:linkParams];
+        });
     };
 
     if ([SingularAppDelegate shared].launchOptions != nil) {
@@ -151,11 +153,22 @@ static NSDictionary *configDict;
         NSLog(@"everything is null");
     }
 
+    config.deviceAttributionCallback = ^(NSDictionary *attributionInfo) {
+        NSString *attributionData = [self dictionaryToJson:attributionInfo];
+        if (attributionData != nil) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [channel invokeMethod:@"deviceAttributionCallbackName" arguments:attributionData];
+            });
+        }
+    };
+
     config.conversionValueUpdatedCallback = ^(NSInteger conversionValue) {
         NSString *conversionValueUpdatedCallback = configDict[@"conversionValueUpdatedCallback"];
 
         if (conversionValueUpdatedCallback != nil) {
-            [channel invokeMethod:@"conversionValueUpdatedCallbackName" arguments:@(conversionValue)];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [channel invokeMethod:@"conversionValueUpdatedCallbackName" arguments:@(conversionValue)];
+            });
         }
     };
 
@@ -163,15 +176,43 @@ static NSDictionary *configDict;
         NSString *conversionValuesUpdatedCallback = configDict[@"conversionValuesUpdatedCallback"];
 
         if (conversionValuesUpdatedCallback != nil) {
-            NSMutableDictionary *updatedConversionValues = [[NSMutableDictionary alloc] init];
-            [updatedConversionValues setValue:(conversionValue != nil) ? @([conversionValue integerValue]) : @(-1) forKey:@"conversionValue"];
-            [updatedConversionValues setValue:(coarse != nil) ? @([coarse integerValue]) : @(-1) forKey:@"coarse"];
-            [updatedConversionValues setValue:@(lock) forKey:@"lock"];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                NSMutableDictionary *updatedConversionValues = [[NSMutableDictionary alloc] init];
+                [updatedConversionValues setValue:(conversionValue != nil) ? @([conversionValue integerValue]) : @(-1) forKey:@"conversionValue"];
+                [updatedConversionValues setValue:(coarse != nil) ? @([coarse integerValue]) : @(-1) forKey:@"coarse"];
+                [updatedConversionValues setValue:@(lock) forKey:@"lock"];
 
-            [channel invokeMethod:@"conversionValuesUpdatedCallbackName" arguments:updatedConversionValues];
+                [channel invokeMethod:@"conversionValuesUpdatedCallbackName" arguments:updatedConversionValues];
+            });
         }
     };
+    
+    NSString *customSdid = configDict[@"customSdid"];
+    config.customSdid = customSdid;
+    config.sdidReceivedHandler = ^(NSString *result) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [channel invokeMethod:@"sdidReceivedCallbackName" arguments:result];
+        });
+    };
+
+    config.didSetSdidHandler = ^(NSString *result) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [channel invokeMethod:@"didSetSdidCallbackName" arguments:result];
+        });
+    };
+
     [Singular start:config];
+}
+
++ (NSString *)dictionaryToJson:(NSDictionary *)data {
+    NSError *error;
+    NSData *JSON = [NSJSONSerialization dataWithJSONObject:data options:0 error:&error];
+    if (error) {
+        return nil;
+    }
+    
+    NSString *JSONString = [[NSString alloc] initWithData:JSON encoding:NSUTF8StringEncoding];
+    return JSONString;
 }
 
 - (void)start:(FlutterMethodCall *)call withResult:(FlutterResult)result {
@@ -206,8 +247,10 @@ static NSDictionary *configDict;
 
 - (void)registerDeviceTokenForUninstall:(FlutterMethodCall *)call withResult:(FlutterResult)result {
     NSString *deviceToken = call.arguments[@"deviceToken"];
-
-    [Singular registerDeviceTokenForUninstall:[deviceToken dataUsingEncoding:NSUTF8StringEncoding]];
+    NSData *tokenData = [self convertHexStringToDataBytes:deviceToken];
+    if (tokenData) {
+        [Singular registerDeviceTokenForUninstall:tokenData];
+    }
 }
 
 - (void)customRevenue:(FlutterMethodCall *)call withResult:(FlutterResult)result {
@@ -335,6 +378,28 @@ static NSDictionary *configDict;
     }
 
     return YES;
+}
+
+- (NSData *)convertHexStringToDataBytes:(NSString *)hexString {
+    if([hexString length] % 2 != 0) {
+        return nil;
+    }
+
+    const char *chars = [hexString UTF8String];
+    int index = 0, length = (int)[hexString length];
+
+    NSMutableData *data = [NSMutableData dataWithCapacity:length / 2];
+    char byteChars[3] = {'\0','\0','\0'};
+    unsigned long wholeByte;
+
+    while (index < length) {
+        byteChars[0] = chars[index++];
+        byteChars[1] = chars[index++];
+        wholeByte = strtoul(byteChars, NULL, 16);
+        [data appendBytes:&wholeByte length:1];
+    }
+    
+    return data;
 }
 
 @end

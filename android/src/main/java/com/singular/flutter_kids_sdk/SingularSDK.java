@@ -7,11 +7,13 @@ import android.os.Looper;
 
 import androidx.annotation.NonNull;
 
+import com.singular.sdk.SDIDAccessorHandler;
 import com.singular.sdk.ShortLinkHandler;
 import com.singular.sdk.Singular;
 import com.singular.sdk.SingularConfig;
 import com.singular.sdk.SingularLinkHandler;
 import com.singular.sdk.SingularLinkParams;
+import com.singular.sdk.SingularDeviceAttributionHandler;
 
 import org.json.JSONObject;
 
@@ -20,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.flutter.Log;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -151,13 +154,9 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
       case SingularConstants.SET_FCM_TOKEN:
         setFCMDeviceToken(call, result);
         break;
-      case SingularConstants.SET_GCM_TOKEN:
-        setGCMDeviceToken(call, result);
-        break;
       case SingularConstants.REGISTER_DEVICE_TOKEN_FOR_UNINSTALL:
-        setFCMDeviceToken(call, result);
+        registerDeviceTokenForUninstall(call, result);
         break;
-
       case SingularConstants.CREATE_REFERRER_SHORT_LINK:
         createReferrerShortLink(call, result);
         break;
@@ -202,6 +201,14 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
       singularConfig.withLoggingEnabled();
     }
 
+    try {
+      int logLevel = (int) configDict.get("logLevel");
+
+      if (logLevel >= 0) {
+        singularConfig.withLogLevel(logLevel);
+      }
+    } catch (Throwable t) { }
+
     double sessionTimeout = (double) configDict.get("sessionTimeout");
     if (sessionTimeout >= 0) {
       singularConfig.withSessionTimeoutInSec((long) sessionTimeout);
@@ -210,11 +217,6 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
     Object limitDataSharing = configDict.get("limitDataSharing");
     if (limitDataSharing != null) {
       singularConfig.withLimitDataSharing((boolean) limitDataSharing);
-    }
-
-    String imei = (String) configDict.get("imei");
-    if (imei != null) {
-      singularConfig.withIMEI(imei);
     }
 
     String facebookAppId = (String) configDict.get("facebookAppId");
@@ -276,12 +278,55 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
 
     if (mIntent != null) {
       int intentHash = mIntent.hashCode();
-
       if (intentHash != currentIntentHash) {
         currentIntentHash = intentHash;
         singularConfig.withSingularLink(mIntent, singularLinkHandler,(long) shortLinkResolveTimeOut);
       }
     }
+    singularConfig.withSingularDeviceAttribution(new SingularDeviceAttributionHandler() {
+      @Override
+      public void onDeviceAttributionInfoReceived(Map<String, Object> deviceAttributionData) {
+        JSONObject deviceAttribution = new JSONObject(deviceAttributionData);
+
+        uiThreadHandler.post(new Runnable() {
+          @Override
+          public void run() {
+            if (channel != null) {
+              channel.invokeMethod("deviceAttributionCallbackName",deviceAttribution.toString());
+            }
+          }
+        });
+      }
+    });
+
+    try {
+      String customSdid = (String) configDict.get("customSdid");
+        singularConfig.withCustomSdid(customSdid, new SDIDAccessorHandler() {
+          @Override
+          public void didSetSdid(String result) {
+            uiThreadHandler.post(new Runnable() {
+              @Override
+              public void run() {
+                if (channel != null) {
+                  channel.invokeMethod("didSetSdidCallbackName", result);
+                }
+              }
+            });
+          }
+
+          @Override
+          public void sdidReceived(String result) {
+            uiThreadHandler.post(new Runnable() {
+              @Override
+              public void run() {
+                if (channel != null) {
+                  channel.invokeMethod("sdidReceivedCallbackName", result);
+                }
+              }
+            });
+          }
+        });
+    } catch (Throwable throwable) { /* unhandled */}
 
     Singular.init(mContext, singularConfig);
   }
@@ -388,9 +433,9 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
     Singular.setFCMDeviceToken(fcmToken);
   }
 
-  private void setGCMDeviceToken(final MethodCall call, final Result result) {
-    String gcmToken = call.argument("gcmToken");
-    Singular.setGCMDeviceToken(gcmToken);
+  private void registerDeviceTokenForUninstall(final MethodCall call, final Result result) {
+    String fcmToken = call.argument("deviceToken");
+    Singular.setFCMDeviceToken(fcmToken);
   }
 
   private void setWrapperNameAndVersion(final MethodCall call, final Result result) {
