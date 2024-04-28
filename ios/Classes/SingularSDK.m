@@ -306,8 +306,10 @@ static NSDictionary *configDict;
                           forKey:@"error"];
         }
 
-        [channel invokeMethod:@"shortLinkCallbackName"
-                    arguments:linkParams];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [channel invokeMethod:@"shortLinkCallbackName"
+                        arguments:linkParams];
+        });
     }];
 }
 
