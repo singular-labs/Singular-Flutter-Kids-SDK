@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'singular_flutter_kids_sdk'
-  s.version          = '1.5.0'
+  s.version          = '1.5.1'
   s.summary          = 'Singular flutter plugin for Kids project.'
   s.description      = <<-DESC
 Singular's flutter plugin project.
