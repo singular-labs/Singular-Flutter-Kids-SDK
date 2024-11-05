@@ -23,7 +23,7 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     defaultConfig {
         minSdkVersion 16
@@ -31,5 +31,5 @@ android {
 }
 
 dependencies {
-    implementation 'com.singular.sdk:singular_kids_sdk:12.5.5'
+    implementation 'com.singular.sdk:singular_kids_sdk:12.6.0'
 }

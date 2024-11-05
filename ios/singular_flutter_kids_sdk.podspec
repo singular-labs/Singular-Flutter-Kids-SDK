@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'singular_flutter_kids_sdk'
-  s.version          = '1.4.0'
+  s.version          = '1.5.1'
   s.summary          = 'Singular flutter plugin for Kids project.'
   s.description      = <<-DESC
 Singular's flutter plugin project.
@@ -13,7 +13,8 @@ Singular's flutter plugin project.
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.platform = :ios, '12.0'
-  s.ios.dependency 'Singular-Kids-SDK', '12.4.2'
+  s.ios.dependency 'Singular-Kids-SDK', '12.6.0'
+  s.static_framework = true
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES', 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386' }
