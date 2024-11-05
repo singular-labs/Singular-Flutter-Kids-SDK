@@ -1,4 +1,5 @@
 ## 1.5.0
+- IAP object revenue type change
 - Updates underlying native iOS SDK to 12.6.0 and Android to 12.6.0
 
 ## 1.4.0
