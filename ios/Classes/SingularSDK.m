@@ -7,7 +7,6 @@
 
 @implementation SingularSDK
 
-static NSURL *tempOpenUrl;
 static FlutterMethodChannel *channel;
 static NSDictionary *configDict;
 
@@ -73,6 +72,8 @@ static NSDictionary *configDict;
         [self skanGetConversionValue:call withResult:result];
     } else if ([CREATE_REFERRER_SHORT_LINK isEqualToString:call.method]) {
         [self createReferrerShortLink:call withResult:result];
+    } else if ([HANDLE_PUSH_NOTIFICATION isEqualToString:call.method]) {
+        [self handlePushNotification:call withResult:result];
     } else {
         result(FlutterMethodNotImplemented);
     }
@@ -103,6 +104,7 @@ static NSDictionary *configDict;
     config.waitForTrackingAuthorizationWithTimeoutInterval = waitForTrackingAuthorizationWithTimeoutInterval;
     config.shortLinkResolveTimeOut = shortLinkResolveTimeOut;
     config.espDomains = configDict[@"espDomains"];
+    config.brandedDomains = configDict[@"brandedDomains"];
 
     NSArray *props = configDict[@"globalProperties"];
 
@@ -127,7 +129,7 @@ static NSDictionary *configDict;
 
     NSNumber *sessionTimeout = configDict[@"sessionTimeout"];
 
-    if (sessionTimeout >= 0) {
+    if ([sessionTimeout intValue] >= 0) {
         [Singular setSessionTimeout:[sessionTimeout intValue]];
     }
 
@@ -142,7 +144,7 @@ static NSDictionary *configDict;
             [channel invokeMethod:@"singularLinksHandlerName" arguments:linkParams];
         });
     };
-
+    
     if ([SingularAppDelegate shared].launchOptions != nil) {
         config.launchOptions = [SingularAppDelegate shared].launchOptions;
     } else if ([SingularAppDelegate shared].userActivity != nil) {
@@ -200,6 +202,8 @@ static NSDictionary *configDict;
             [channel invokeMethod:@"didSetSdidCallbackName" arguments:result];
         });
     };
+    
+    config.pushNotificationLinkPath = configDict[@"pushNotificationsLinkPaths"];;
 
     [Singular start:config];
 }
@@ -358,6 +362,11 @@ static NSDictionary *configDict;
 
 - (void)skanGetConversionValue:(FlutterMethodCall *)call withResult:(FlutterResult)result {
     result([Singular skanGetConversionValue]);
+}
+
+- (void)handlePushNotification:(FlutterMethodCall *)call withResult:(FlutterResult)result {
+    NSDictionary *pushNotificationPayload = call.arguments[@"pushNotificationPayload"];
+    [Singular handlePushNotification:pushNotificationPayload];
 }
 
 - (BOOL)isFieldValid:(NSObject *)field {

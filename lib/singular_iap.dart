@@ -9,7 +9,7 @@ class SingularIAP {
     if (_currencyCode != null) {
       eventInformation['pcc'] = _currencyCode;
     }
-
+    
     eventInformation['r'] = _revenue;
     eventInformation["is_revenue_event"] = true;
 

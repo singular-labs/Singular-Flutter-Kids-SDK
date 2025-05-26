@@ -46,17 +46,30 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
   private static SingularLinkHandler singularLinkHandler;
   private static SingularConfig singularConfig;
 
+  private static String[][] pushNotificationsLinkPaths;
+
   public static void onNewIntent(Intent intent) {
-
-    // We save the intent hash code to make sure that the intent we get is a new one to avoid resolving an old deeplink.
-    if (singularConfig != null &&
-            singularLinkHandler != null && intent != null && intent.hashCode() != currentIntentHash && intent.getData() != null &&
-            Intent.ACTION_VIEW.equals(intent.getAction())) {
-      currentIntentHash = intent.hashCode();
-
-      singularConfig.withSingularLink(intent, singularLinkHandler);
-      Singular.init(mContext, singularConfig);
+    if (intent == null || intent.hashCode() == currentIntentHash) {
+      return;
     }
+
+    if (singularConfig == null) {
+      return;
+    }
+
+    // We save the intent hash code to make sure that the intent we get is a new one to avoid resolving an old push/deeplink.
+    currentIntentHash = intent.hashCode();
+
+    if (intent.getExtras() != null && intent.getExtras().size() > 0
+            && pushNotificationsLinkPaths != null && pushNotificationsLinkPaths.length > 0) {
+      singularConfig.withPushNotificationPayload(intent, pushNotificationsLinkPaths);
+    }
+
+    if (singularLinkHandler != null && intent.getData() != null && Intent.ACTION_VIEW.equals(intent.getAction())) {
+      singularConfig.withSingularLink(intent, singularLinkHandler);
+    }
+
+    Singular.init(mContext, singularConfig);
   }
 
   // Notify the plugin that it has been attached to an engine.
@@ -81,6 +94,8 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
   @Override
   public void onReattachedToActivityForConfigChanges(
           ActivityPluginBinding binding) {
+    // to make sure that we always have latest intent
+    mIntent = binding.getActivity().getIntent();
   }
 
   @Override
@@ -232,6 +247,13 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
     } catch (Throwable t) { /* intentionally unhandled */ }
 
     try {
+      List<String> brandedDomains = (ArrayList<String>) configDict.get("brandedDomains");
+      if (brandedDomains != null && brandedDomains.size() > 0) {
+        singularConfig.withBrandedDomains(brandedDomains);
+      }
+    } catch (Throwable t) { /* intentionally unhandled */ }
+
+    try {
       ArrayList<Map>  globalProps =  (ArrayList<Map>) configDict.get("globalProperties");
       if (globalProps != null){
         for (Map prop: globalProps){
@@ -276,13 +298,23 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
       }
     };
 
+    List<List<String>> pushPath = (List<List<String>>) configDict.get("pushNotificationsLinkPaths");
+    pushNotificationsLinkPaths = convertTo2DArray(pushPath);
+
     if (mIntent != null) {
       int intentHash = mIntent.hashCode();
       if (intentHash != currentIntentHash) {
         currentIntentHash = intentHash;
-        singularConfig.withSingularLink(mIntent, singularLinkHandler,(long) shortLinkResolveTimeOut);
+
+        if (mIntent.getExtras() != null && mIntent.getExtras().size() > 0
+                && pushNotificationsLinkPaths != null && pushNotificationsLinkPaths.length > 0) {
+          singularConfig.withPushNotificationPayload(mIntent, pushNotificationsLinkPaths);
+        }
+
+        singularConfig.withSingularLink(mIntent, singularLinkHandler, (long) shortLinkResolveTimeOut);
       }
     }
+
     singularConfig.withSingularDeviceAttribution(new SingularDeviceAttributionHandler() {
       @Override
       public void onDeviceAttributionInfoReceived(Map<String, Object> deviceAttributionData) {
@@ -301,31 +333,31 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
 
     try {
       String customSdid = (String) configDict.get("customSdid");
-        singularConfig.withCustomSdid(customSdid, new SDIDAccessorHandler() {
-          @Override
-          public void didSetSdid(String result) {
-            uiThreadHandler.post(new Runnable() {
-              @Override
-              public void run() {
-                if (channel != null) {
-                  channel.invokeMethod("didSetSdidCallbackName", result);
-                }
+      singularConfig.withCustomSdid(customSdid, new SDIDAccessorHandler() {
+        @Override
+        public void didSetSdid(String result) {
+          uiThreadHandler.post(new Runnable() {
+            @Override
+            public void run() {
+              if (channel != null) {
+                channel.invokeMethod("didSetSdidCallbackName", result);
               }
-            });
-          }
+            }
+          });
+        }
 
-          @Override
-          public void sdidReceived(String result) {
-            uiThreadHandler.post(new Runnable() {
-              @Override
-              public void run() {
-                if (channel != null) {
-                  channel.invokeMethod("sdidReceivedCallbackName", result);
-                }
+        @Override
+        public void sdidReceived(String result) {
+          uiThreadHandler.post(new Runnable() {
+            @Override
+            public void run() {
+              if (channel != null) {
+                channel.invokeMethod("sdidReceivedCallbackName", result);
               }
-            });
-          }
-        });
+            }
+          });
+        }
+      });
     } catch (Throwable throwable) { /* unhandled */}
 
     Singular.init(mContext, singularConfig);
@@ -488,4 +520,20 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
               }
             });
   }
+
+  static String[][] convertTo2DArray(List<List<String>> listOfLists) {
+    if (listOfLists == null || listOfLists.isEmpty()) {
+      return null;
+    }
+
+    String[][] array = new String[listOfLists.size()][];
+
+    for (int i = 0; i < listOfLists.size(); i++) {
+      List<String> list = listOfLists.get(i);
+      array[i] = list.toArray(new String[0]);
+    }
+
+    return array;
+  }
+
 }
