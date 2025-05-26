@@ -28,6 +28,8 @@ android {
     defaultConfig {
         minSdkVersion 16
     }
+
+    namespace 'com.singular.flutter_kids_sdk'
 }
 
 dependencies {
