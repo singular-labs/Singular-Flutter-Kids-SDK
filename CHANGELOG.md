@@ -1,3 +1,6 @@
+## 1.7.1
+- Updates underlying native Android SDK to 12.9.1
+
 ## 1.7.0
 - push notifications support
 - branded domains support
