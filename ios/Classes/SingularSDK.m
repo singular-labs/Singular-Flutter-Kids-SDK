@@ -105,7 +105,8 @@ static NSDictionary *configDict;
     config.shortLinkResolveTimeOut = shortLinkResolveTimeOut;
     config.espDomains = configDict[@"espDomains"];
     config.brandedDomains = configDict[@"brandedDomains"];
-
+    config.enableOdmWithTimeoutInterval = [configDict[@"enableOdmWithTimeoutInterval"] intValue];
+    
     NSArray *props = configDict[@"globalProperties"];
 
     if (props != nil) {
