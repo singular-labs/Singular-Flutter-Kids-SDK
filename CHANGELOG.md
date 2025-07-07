@@ -1,3 +1,7 @@
+## 1.8.0
+- Added support for upcoming Google Ads on Device Measurement
+- Updates underlying native iOS SDK to 12.8.1
+
 ## 1.7.1
 - Updates underlying native Android SDK to 12.9.1
 
