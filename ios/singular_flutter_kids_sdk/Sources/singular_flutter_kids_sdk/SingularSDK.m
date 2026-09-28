@@ -10,6 +10,7 @@
 static FlutterMethodChannel *channel;
 static NSDictionary *configDict;
 
+
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar> *)registrar {
     channel = [FlutterMethodChannel methodChannelWithName:@"singular-api" binaryMessenger:[registrar messenger]];
 
@@ -80,10 +81,12 @@ static NSDictionary *configDict;
 }
 
 + (void)initializeSingular {
-    [SingularSDK initSDK];
+    [SingularSDK initSDKAsExplicitStart:NO];
 }
 
-+ (void)initSDK {
+// isExplicitStart is YES when the app called Singular.start(), NO when a link re-opened the app
+// and we are re-running init with the config we already had.
++ (void)initSDKAsExplicitStart:(BOOL)isExplicitStart {
     if (configDict == nil) {
         return;
     }
@@ -106,32 +109,40 @@ static NSDictionary *configDict;
     config.espDomains = configDict[@"espDomains"];
     config.brandedDomains = configDict[@"brandedDomains"];
     config.enableOdmWithTimeoutInterval = [configDict[@"enableOdmWithTimeoutInterval"] intValue];
-    
-    NSArray *props = configDict[@"globalProperties"];
 
-    if (props != nil) {
-        for (NSDictionary *prop in props) {
-            NSString *key = [prop objectForKey:@"key"];
-            NSString *value = [prop objectForKey:@"value"];
-            BOOL overrideExisting = [[prop objectForKey:@"overrideExisting"]boolValue];
-            [config setGlobalProperty:key withValue:value overrideExisting:overrideExisting];
+    config.enableLogging = [configDict[@"enableLogging"] boolValue];
+    NSNumber *logLevel = configDict[@"logLevel"];
+    if (logLevel != nil && ![logLevel isEqual:[NSNull null]] && [logLevel integerValue] >= 0) {
+        config.logLevel = (SingularLogLevel)[logLevel integerValue];
+    }
+
+    if (isExplicitStart) {
+        NSArray *props = configDict[@"globalProperties"];
+
+        if (props != nil) {
+            for (NSDictionary *prop in props) {
+                NSString *key = [prop objectForKey:@"key"];
+                NSString *value = [prop objectForKey:@"value"];
+                BOOL overrideExisting = [[prop objectForKey:@"overrideExisting"]boolValue];
+                [config setGlobalProperty:key withValue:value overrideExisting:overrideExisting];
+            }
         }
-    }
 
-    if (customUserId) {
-        [Singular setCustomUserId:customUserId];
-    }
+        if (customUserId) {
+            [Singular setCustomUserId:customUserId];
+        }
 
-    NSNumber *limitDataSharing = configDict[@"limitDataSharing"];
+        NSNumber *limitDataSharing = configDict[@"limitDataSharing"];
 
-    if (![limitDataSharing isEqual:[NSNull null]]) {
-        [Singular limitDataSharing:[limitDataSharing boolValue]];
-    }
+        if (limitDataSharing != nil && ![limitDataSharing isEqual:[NSNull null]]) {
+            [Singular limitDataSharing:[limitDataSharing boolValue]];
+        }
 
-    NSNumber *sessionTimeout = configDict[@"sessionTimeout"];
+        NSNumber *sessionTimeout = configDict[@"sessionTimeout"];
 
-    if ([sessionTimeout intValue] >= 0) {
-        [Singular setSessionTimeout:[sessionTimeout intValue]];
+        if ([sessionTimeout intValue] >= 0) {
+            [Singular setSessionTimeout:[sessionTimeout intValue]];
+        }
     }
 
     config.singularLinksHandler = ^(SingularLinkParams *params) {
@@ -146,15 +157,32 @@ static NSDictionary *configDict;
         });
     };
     
-    if ([SingularAppDelegate shared].launchOptions != nil) {
-        config.launchOptions = [SingularAppDelegate shared].launchOptions;
-    } else if ([SingularAppDelegate shared].userActivity != nil) {
-        config.userActivity = [SingularAppDelegate shared].userActivity;
-    } else if ([SingularAppDelegate shared].openURL != nil) {
-        config.openUrl = [SingularAppDelegate shared].openURL;
-    } else {
-        NSLog(@"everything is null");
+    SingularAppDelegate *singularAppDelegate = [SingularAppDelegate shared];
+
+    // Under the scene lifecycle these arrive from different callbacks and can be set
+    // at the same time: launchOptions from application:didFinishLaunchingWithOptions:,
+    // userActivity/openURL from scene:willConnectToSession:options:.
+    // This was safe pre-scenes only because launchOptions itself contained the user
+    // activity.
+    if (singularAppDelegate.launchOptions != nil) {
+        config.launchOptions = singularAppDelegate.launchOptions;
     }
+    if (singularAppDelegate.userActivity != nil) {
+        config.userActivity = singularAppDelegate.userActivity;
+    }
+    if (singularAppDelegate.openURL != nil) {
+        config.openUrl = singularAppDelegate.openURL;
+    }
+
+    if (singularAppDelegate.launchOptions == nil &&
+        singularAppDelegate.userActivity == nil &&
+        singularAppDelegate.openURL == nil) {
+        NSLog(@"[SingularSDK][INFO] everything is null");
+    }
+
+    singularAppDelegate.launchOptions = nil;
+    singularAppDelegate.userActivity = nil;
+    singularAppDelegate.openURL = nil;
 
     config.deviceAttributionCallback = ^(NSDictionary *attributionInfo) {
         NSString *attributionData = [self dictionaryToJson:attributionInfo];
@@ -222,7 +250,7 @@ static NSDictionary *configDict;
 
 - (void)start:(FlutterMethodCall *)call withResult:(FlutterResult)result {
     configDict = call.arguments;
-    [SingularSDK initSDK];
+    [SingularSDK initSDKAsExplicitStart:YES];
 }
 
 - (void)event:(FlutterMethodCall *)call withResult:(FlutterResult)result {
@@ -346,16 +374,16 @@ static NSDictionary *configDict;
 }
 
 - (void)skanUpdateConversionValue:(FlutterMethodCall *)call withResult:(FlutterResult)result {
-    NSString *conversionValue =  call.arguments[@"conversionValue"];
+    NSNumber *conversionValue = call.arguments[@"conversionValue"];
 
-    if ([self isFieldValid:conversionValue]) {
+    if ([SingularSDK isFieldValid:conversionValue]) {
         result(@([Singular skanUpdateConversionValue:[conversionValue integerValue]]));
     }
 }
 
 - (void)skanUpdateConversionValues:(FlutterMethodCall *)call withResult:(FlutterResult)result {
-    NSString *conversionValue =  call.arguments[@"conversionValue"];
-    NSString *coarse =  call.arguments[@"coarse"];
+    NSNumber *conversionValue = call.arguments[@"conversionValue"];
+    NSNumber *coarse = call.arguments[@"coarse"];
     BOOL lock =  [call.arguments[@"lock"] boolValue];
 
     [Singular skanUpdateConversionValue:[conversionValue integerValue] coarse:[coarse integerValue] lock:lock];
@@ -370,7 +398,7 @@ static NSDictionary *configDict;
     [Singular handlePushNotification:pushNotificationPayload];
 }
 
-- (BOOL)isFieldValid:(NSObject *)field {
++ (BOOL)isFieldValid:(NSObject *)field {
     if (field == nil) {
         return NO;
     }

@@ -1,11 +1,11 @@
 name: singular_flutter_kids_sdk
-description: A Flutter plugin for Singular Kids SDK.
-version: 1.8.0
+description: A Flutter plugin for Singular KIDS SDK.
+version: 1.9.1
 homepage: https://github.com/singular-labs/Singular-Flutter-Kids-SDK.git
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
-  flutter: ">=1.20.0"
+  sdk: ">=2.17.0 <4.0.0"
+  flutter: ">=3.0.0"
 
 dependencies:
   flutter:

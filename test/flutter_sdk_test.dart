@@ -8,14 +8,21 @@ void main() {
 
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late SingularConfig config;
-
   String selectedMethod = "";
 
   setUp(() {
-    channel.setMockMethodCallHandler((MethodCall methodCall) async {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel,((MethodCall methodCall) async {
       String method = methodCall.method;
       switch (method) {
+        case "isAllTrackingStopped":
+        case "getLimitDataSharing":
+        case "setGlobalProperty":
+          selectedMethod = method;
+          return true;
+        case "getGlobalProperties":
+          selectedMethod = method;
+          return <dynamic, dynamic>{};
         case "start":
         case "setCustomUserId":
         case "unsetCustomUserId":
@@ -30,24 +37,21 @@ void main() {
         case "trackingUnder13":
         case "stopAllTracking":
         case "resumeAllTracking":
-        case "isAllTrackingStopped":
         case "limitDataSharing":
-        case "getLimitDataSharing":
         case "clearGlobalProperties":
         case "unsetGlobalProperty":
-        case "setGlobalProperty":
-        case "getGlobalProperties":
         case "setWrapperNameAndVersion":
         case "setFCMDeviceToken":
-        case "setGCMDeviceToken":
           selectedMethod = method;
           break;
       }
-    });
+      return null;
+    }));
   });
 
   tearDown(() {
-    channel.setMockMethodCallHandler(null);
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, null);
   });
 
   test('check start call', () async {
@@ -133,10 +137,5 @@ void main() {
   test('check setFCMDeviceToken call', () async {
     Singular.setFCMDeviceToken("12345");
     expect(selectedMethod, 'setFCMDeviceToken');
-  });
-
-  test('check setGCMDeviceToken call', () async {
-    Singular.setGCMDeviceToken("12345");
-    expect(selectedMethod, 'setGCMDeviceToken');
   });
 }

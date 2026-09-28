@@ -1,6 +1,8 @@
 #ifndef SINGULARAPPDELEGATE_H
 #define SINGULARAPPDELEGATE_H
 
+#import <Foundation/Foundation.h>
+
 @interface SingularAppDelegate : NSObject
 
 @property NSDictionary * _Nullable launchOptions;

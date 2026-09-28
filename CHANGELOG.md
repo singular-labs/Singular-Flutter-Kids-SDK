@@ -1,3 +1,7 @@
+## 1.9.1
+- Added support for Swift package manager
+- Updates underlying native iOS SDK to 12.14.2 and Android to 12.16.1
+
 ## 1.8.0
 - Added support for upcoming Google Ads on Device Measurement
 - Updates underlying native iOS SDK to 12.8.1
