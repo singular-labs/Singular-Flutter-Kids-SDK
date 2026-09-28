@@ -1,5 +1,11 @@
+//
+// Created by TY Tandon on 19/7/21.
+//
+
 #ifndef SINGULARAPPDELEGATE_H
 #define SINGULARAPPDELEGATE_H
+
+#import <Foundation/Foundation.h>
 
 @interface SingularAppDelegate : NSObject
 

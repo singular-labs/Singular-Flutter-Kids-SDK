@@ -48,12 +48,15 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
 
   private static String[][] pushNotificationsLinkPaths;
 
+  private static Intent pendingIntent;
+
   public static void onNewIntent(Intent intent) {
     if (intent == null || intent.hashCode() == currentIntentHash) {
       return;
     }
 
     if (singularConfig == null) {
+      pendingIntent = intent;
       return;
     }
 
@@ -62,7 +65,7 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
 
     if (intent.getExtras() != null && intent.getExtras().size() > 0
             && pushNotificationsLinkPaths != null && pushNotificationsLinkPaths.length > 0) {
-      singularConfig.withPushNotificationPayload(intent, pushNotificationsLinkPaths);
+        singularConfig.withPushNotificationPayload(intent, pushNotificationsLinkPaths);
     }
 
     if (singularLinkHandler != null && intent.getData() != null && Intent.ACTION_VIEW.equals(intent.getAction())) {
@@ -94,7 +97,7 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
   @Override
   public void onReattachedToActivityForConfigChanges(
           ActivityPluginBinding binding) {
-    // to make sure that we always have latest intent
+   // to make sure that we always have latest intent
     mIntent = binding.getActivity().getIntent();
   }
 
@@ -129,6 +132,9 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
         break;
       case SingularConstants.CUSTOM_REVENUE_WITH_ATTRIBUTES:
         customRevenueWithArgs(call, result);
+        break;
+      case SingularConstants.CUSTOM_REVENUE_WITH_ALL_ATTRIBUTES:
+        customRevenueWithAllAttributes(call, result);
         break;
       case SingularConstants.TRACKING_OPT_IN:
         trackingOptIn(call, result);
@@ -197,7 +203,6 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
 
     String apiKey = (String) configDict.get("apiKey");
     String secretKey = (String) configDict.get("secretKey");
-    boolean collectOAID = (boolean) configDict.get("collectOAID");
     boolean enableLogging = (boolean) configDict.get("enableLogging");
 
     double shortLinkResolveTimeOut = (double) configDict.get("shortLinkResolveTimeOut");
@@ -208,9 +213,6 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
 
     if (customUserId != null) {
       singularConfig.withCustomUserId(customUserId);
-    }
-    if (collectOAID) {
-      singularConfig.withOAIDCollection();
     }
     if (enableLogging) {
       singularConfig.withLoggingEnabled();
@@ -301,20 +303,25 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
     List<List<String>> pushPath = (List<List<String>>) configDict.get("pushNotificationsLinkPaths");
     pushNotificationsLinkPaths = convertTo2DArray(pushPath);
 
-    if (mIntent != null) {
-      int intentHash = mIntent.hashCode();
+    // A deep link that arrived before init was parked in pendingIntent by onNewIntent. It is always
+    // newer than mIntent (captured once when the plugin attached to the Activity), so it wins.
+    // We clear it right after picking it up so a later init won't resolve the same stale intent again.
+    Intent intentToResolve = pendingIntent != null ? pendingIntent : mIntent;
+    pendingIntent = null;
+
+    if (intentToResolve != null) {
+      int intentHash = intentToResolve.hashCode();
       if (intentHash != currentIntentHash) {
         currentIntentHash = intentHash;
 
-        if (mIntent.getExtras() != null && mIntent.getExtras().size() > 0
+        if (intentToResolve.getExtras() != null && intentToResolve.getExtras().size() > 0
                 && pushNotificationsLinkPaths != null && pushNotificationsLinkPaths.length > 0) {
-          singularConfig.withPushNotificationPayload(mIntent, pushNotificationsLinkPaths);
+            singularConfig.withPushNotificationPayload(intentToResolve, pushNotificationsLinkPaths);
         }
-
-        singularConfig.withSingularLink(mIntent, singularLinkHandler, (long) shortLinkResolveTimeOut);
       }
     }
 
+    singularConfig.withSingularLink(intentToResolve, singularLinkHandler, (long) shortLinkResolveTimeOut);
     singularConfig.withSingularDeviceAttribution(new SingularDeviceAttributionHandler() {
       @Override
       public void onDeviceAttributionInfoReceived(Map<String, Object> deviceAttributionData) {
@@ -333,31 +340,31 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
 
     try {
       String customSdid = (String) configDict.get("customSdid");
-      singularConfig.withCustomSdid(customSdid, new SDIDAccessorHandler() {
-        @Override
-        public void didSetSdid(String result) {
-          uiThreadHandler.post(new Runnable() {
-            @Override
-            public void run() {
-              if (channel != null) {
-                channel.invokeMethod("didSetSdidCallbackName", result);
+        singularConfig.withCustomSdid(customSdid, new SDIDAccessorHandler() {
+          @Override
+          public void didSetSdid(String result) {
+            uiThreadHandler.post(new Runnable() {
+              @Override
+              public void run() {
+                if (channel != null) {
+                  channel.invokeMethod("didSetSdidCallbackName", result);
+                }
               }
-            }
-          });
-        }
+            });
+          }
 
-        @Override
-        public void sdidReceived(String result) {
-          uiThreadHandler.post(new Runnable() {
-            @Override
-            public void run() {
-              if (channel != null) {
-                channel.invokeMethod("sdidReceivedCallbackName", result);
+          @Override
+          public void sdidReceived(String result) {
+            uiThreadHandler.post(new Runnable() {
+              @Override
+              public void run() {
+                if (channel != null) {
+                  channel.invokeMethod("sdidReceivedCallbackName", result);
+                }
               }
-            }
-          });
-        }
-      });
+            });
+          }
+        });
     } catch (Throwable throwable) { /* unhandled */}
 
     Singular.init(mContext, singularConfig);
@@ -409,6 +416,19 @@ public class SingularSDK implements FlutterPlugin, ActivityAware, MethodCallHand
     Map args = call.argument("attributes");
 
     Singular.customRevenue(eventName, currency, amount, args);
+  }
+
+  private void customRevenueWithAllAttributes(final MethodCall call, final Result result) {
+    String eventName = call.argument("eventName");
+    String currency = call.argument("currency");
+    double amount = call.argument("amount");
+    String productSKU = call.argument("productSKU");
+    String productName = call.argument("productName");
+    String productCategory = call.argument("productCategory");
+    int productQuantity = call.argument("productQuantity");
+    double productPrice = call.argument("productPrice");
+
+    Singular.customRevenue(eventName, currency, amount, productSKU, productName, productCategory, productQuantity, productPrice);
   }
 
   private void trackingOptIn(final MethodCall call, final Result result) {

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:singular_flutter_kids_sdk/singular_global_property.dart';
 import 'package:singular_flutter_kids_sdk/singular_link_params.dart';
 
+
 typedef void SingularLinksHandler(SingularLinkParams params);
 typedef void ConversionValueUpdatedCallback(int conversionValue);
 typedef void ShortLinkCallback(String ? data, String ? error);
@@ -29,7 +30,6 @@ class SingularConfig {
   String? customUserId;
   bool? limitDataSharing;
   String? facebookAppId;
-  bool collectOAID = false;
   bool enableLogging = false;
   ShortLinkCallback ? shortLinkCallback;
   List<SingularGlobalProperty> globalProperties = [];
@@ -157,7 +157,6 @@ class SingularConfig {
     }
 
     configMap['sessionTimeout'] = sessionTimeout;
-    configMap['collectOAID'] = collectOAID;
     configMap['enableLogging'] = enableLogging;
     configMap['logLevel'] = logLevel;
     configMap['espDomains'] = espDomains;
